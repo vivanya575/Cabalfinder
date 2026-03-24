@@ -1,17 +1,16 @@
 # Cabalfinder
 
-For the approved V2 redesign plan, see [docs/V2_SOLANA_HOLDER_INTELLIGENCE_PLAN.md](/Users/akshayukey/Downloads/VIBECODING/Cabalfinder/docs/V2_SOLANA_HOLDER_INTELLIGENCE_PLAN.md).
-The remainder of this README documents the current legacy implementation, not the approved V2 architecture.
+For the approved V2 redesign plan, see [docs/V2_SOLANA_HOLDER_INTELLIGENCE_PLAN.md](docs/V2_SOLANA_HOLDER_INTELLIGENCE_PLAN.md).
 
 ## V2 Scaffold
 
-The new implementation foundation now lives in:
+The new implementation foundation lives in:
 
-- [apps/web](/Users/akshayukey/Downloads/VIBECODING/Cabalfinder/apps/web)
-- [apps/api](/Users/akshayukey/Downloads/VIBECODING/Cabalfinder/apps/api)
-- [apps/worker](/Users/akshayukey/Downloads/VIBECODING/Cabalfinder/apps/worker)
-- [packages/shared](/Users/akshayukey/Downloads/VIBECODING/Cabalfinder/packages/shared)
-- [infra/docker-compose.v2.yml](/Users/akshayukey/Downloads/VIBECODING/Cabalfinder/infra/docker-compose.v2.yml)
+- [apps/web](apps/web)
+- [apps/api](apps/api)
+- [apps/worker](apps/worker)
+- [packages/shared](packages/shared)
+- [infra/docker-compose.v2.yml](infra/docker-compose.v2.yml)
 
 Install dependencies:
 
@@ -79,7 +78,7 @@ When done, stop local infrastructure:
 npm run infra:down
 ```
 
-Helius MCP setup details live in [docs/MCP_SETUP.md](/Users/akshayukey/Downloads/VIBECODING/Cabalfinder/docs/MCP_SETUP.md).
+Helius MCP setup details live in [docs/MCP_SETUP.md](docs/MCP_SETUP.md).
 
 Check the scaffold:
 
@@ -87,18 +86,104 @@ Check the scaffold:
 npm run check:v2
 ```
 
-## V2 Phase 2: Active Scan
+## V2 API Routes
 
-The V2 API now includes the first real holder-intelligence slice: an active scan endpoint that:
+### Health and status
 
-- validates a Solana mint
-- fetches holder accounts from Helius DAS / RPC
-- enriches each holder wallet through the Helius Wallet API
-- computes market cap from Helius asset price plus supply
-- ranks the strongest overlaps
-- persists the scan run, source holder snapshot, and ranked contributor positions in PostgreSQL
+```bash
+GET  /healthz                  # liveness probe
+GET  /v1/system/status         # configuration, thresholds, queue names, and provider flags
+```
 
-Required V2 env:
+### Active scan
+
+Validates a mint, fetches top-50 holders from Helius, enriches each holder's fungible positions, computes co-held token overlap, ranks results, and persists everything in PostgreSQL.
+
+```bash
+# Run a new active scan
+curl -X POST http://localhost:4000/v1/scans/active \
+  -H 'content-type: application/json' \
+  -d '{"mint":"So11111111111111111111111111111111111111112","topResults":10}'
+
+# Fetch a persisted scan by id
+curl http://localhost:4000/v1/scans/active/<SCAN_RUN_ID>
+```
+
+### Alerts
+
+Paginated list of threshold-crossing control-edge alerts with resolved token metadata.
+
+```bash
+GET /v1/alerts?limit=25&offset=0
+```
+
+Response fields: `id`, `triggeredAt`, `supplyControlPct`, `previousControlPct`, `overlapWalletCount`, `totalUsdHeld`, `topContributors`, `telegramDelivered`, `sourceToken`, `targetToken`.
+
+### Universe
+
+Tokens currently tracked (market cap above the configured floor), ordered by market cap descending.
+
+```bash
+GET /v1/universe?limit=50&offset=0&minMarketCap=10000
+```
+
+### Score preview
+
+Compute the weighted ranking score for a set of inputs without running a full scan.
+
+```bash
+curl -X POST http://localhost:4000/v1/scoring/active-scan \
+  -H 'content-type: application/json' \
+  -d '{"controlPct":0.3,"totalUsdHeld":50000,"overlapCount":12,"maxControlPct":1,"maxTotalUsdHeld":500000,"maxOverlapCount":50}'
+```
+
+### Job triggers
+
+Manually enqueue background jobs without needing direct Redis access.
+
+```bash
+# Refresh market data for specific mints
+curl -X POST http://localhost:4000/v1/jobs/universe-refresh \
+  -H 'content-type: application/json' \
+  -d '{"mints":["So11111111111111111111111111111111111111112"]}'
+
+# Snapshot top holders for a specific mint
+curl -X POST http://localhost:4000/v1/jobs/holder-snapshot \
+  -H 'content-type: application/json' \
+  -d '{"mint":"So11111111111111111111111111111111111111112"}'
+
+# Run cross-control computation for a source mint
+curl -X POST http://localhost:4000/v1/jobs/control-computation \
+  -H 'content-type: application/json' \
+  -d '{"sourceMint":"So11111111111111111111111111111111111111112"}'
+```
+
+## V2 Worker
+
+The worker process subscribes to five BullMQ queues and processes jobs in parallel.
+
+| Queue | Payload | What it does |
+|---|---|---|
+| `token-universe-refresh` | `{ mints: string[] }` | Helius batch-fetch → upsert tokens above the tracking market-cap floor |
+| `holder-snapshot` | `{ mint: string }` | Fetch top-N holders from Helius and persist snapshots |
+| `control-computation` | `{ sourceMint: string; targetMints?: string[] }` | Cross-reference wallet positions, write control edges, trigger alerts |
+| `alert-delivery` | alert payload | Broadcast Telegram message, mark delivery status |
+| `active-scan` | `{ mint: string; topResults?: number }` | Full holder-enrichment + scoring pipeline |
+
+### Automatic scheduling
+
+The worker periodically re-enqueues `holder-snapshot` and `token-universe-refresh` jobs for all tokens already stored in the database.
+
+Two env vars control the intervals:
+
+- `SNAPSHOT_INTERVAL_MS` — how often to enqueue new holder snapshots (default: 15 minutes)
+- `UNIVERSE_REFRESH_INTERVAL_MS` — how often to refresh market data for tracked tokens (default: 5 minutes)
+
+Set either to `0` to disable automatic scheduling for that job type.
+
+## V2 Setup
+
+Required env vars:
 
 - `DATABASE_URL`
 - `REDIS_URL`
@@ -107,6 +192,8 @@ Required V2 env:
 - `HELIUS_MAX_HOLDER_PAGES`
 - `HELIUS_WALLET_PAGE_LIMIT`
 - `HELIUS_MAX_WALLET_PAGES`
+- `SNAPSHOT_INTERVAL_MS` (optional, default `900000`)
+- `UNIVERSE_REFRESH_INTERVAL_MS` (optional, default `300000`)
 
 Generate and apply the V2 schema:
 
@@ -115,45 +202,23 @@ npm run db:generate
 npm run db:migrate
 ```
 
-Run the API:
+Provider strategy:
 
-```bash
-npm run dev:api
-```
+- V2 is **Helius-first**. Birdeye is not used in the active-scan or monitoring path.
+- Helius MCP is the future agent tooling layer for research and workflow automation.
 
-Active scan endpoint:
+ATH behavior:
 
-```bash
-curl -X POST http://localhost:4000/v1/scans/active \
-  -H 'content-type: application/json' \
-  -d '{"mint":"So11111111111111111111111111111111111111112","topResults":10}'
-```
+- `athUsd` is best-effort from Helius payloads.
+- When Helius does not expose ATH for a token, the API returns `athUsd: null` with a scoped warning.
 
-Fetch a persisted scan by id:
+---
 
-```bash
-curl http://localhost:4000/v1/scans/active/<SCAN_RUN_ID>
-```
+## Legacy V1 (on-chain dashboard)
 
-Supporting routes:
+The sections below document the original file-backed on-chain dashboard. It remains functional but is superseded by the V2 architecture above.
 
-- `GET /healthz`
-- `GET /v1/system/status`
-
-Provider strategy update:
-
-- V2 is now **Helius-first**.
-- Birdeye is no longer part of the active-scan implementation.
-- Helius MCP is treated as the future agent tooling layer for research and workflow automation.
-
-ATH behavior update:
-
-- `athUsd` is now best-effort from Helius payloads in the active scan path.
-- When Helius does not expose ATH for a token, the API keeps `athUsd` as `null` and includes a scoped warning.
-
-On-chain Solana holder-correlation monitor with Telegram alerts.
-
-## What this does
+### What this does
 
 - Builds top-50 owner holder snapshots per configured SPL token.
 - Computes cross-token control metric:
@@ -161,7 +226,7 @@ On-chain Solana holder-correlation monitor with Telegram alerts.
 - Emits alert events and Telegram messages when control crosses threshold.
 - Runs a single-token active scan for co-held tokens, filtered by on-chain market quality.
 
-## Pure on-chain market cap logic
+### Pure on-chain market cap logic
 
 This project does not use Dexscreener or Birdeye.
 
@@ -173,7 +238,7 @@ This project does not use Dexscreener or Birdeye.
 - Price aggregation: liquidity-weighted median across eligible pools for a token
 - Market cap estimate: `on-chain token supply * on-chain USD price`
 
-## Setup
+### Setup (legacy)
 
 1. Install dependencies
 
@@ -208,9 +273,7 @@ Refresh the pool file from Raydium's live API after you change the token list:
 npm run refresh:pools
 ```
 
-## Commands
-
-Run snapshot + correlation + alerts once:
+### Commands (legacy)
 
 ```bash
 npm run start -- run-once
@@ -262,7 +325,7 @@ npm run test:live:mutations
 
 For the broader live-data test matrix, load testing, and security scanning steps, see `TESTING.md`.
 
-## Output files
+### Output files (legacy)
 
 Stored under `DATA_DIR` (default `./data`):
 
@@ -271,7 +334,7 @@ Stored under `DATA_DIR` (default `./data`):
 - `alert_state.json`
 - `alerts.ndjson`
 
-## Notes
+### Notes (legacy)
 
 - The repository now ships with a real BONK/JUP token list and live Raydium pool keys, but live scans and snapshots still depend heavily on the quality of your RPC provider.
 - `npm run refresh:pools` regenerates `config/pools.json` from Raydium's live API for the current token list.

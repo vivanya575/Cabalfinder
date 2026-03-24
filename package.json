@@ -27,6 +27,7 @@
     "db:generate": "npm run db:generate --workspace @cabalfinder/api",
     "db:migrate": "npm run db:migrate --workspace @cabalfinder/api",
     "refresh:pools": "tsx scripts/refreshRaydiumPools.ts",
+    "test:unit": "node --test tests/unit/*.test.mjs",
     "test:live": "tsx scripts/liveSmoke.ts",
     "test:live:mutations": "tsx scripts/liveSmoke.ts --mutations",
     "test:load": "k6 run tests/load/dashboard.k6.js",

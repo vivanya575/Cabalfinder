@@ -8,4 +8,5 @@ zap-report.md
 coverage/
 *.tsbuildinfo
 apps/*/dist/
+packages/*/dist/
 apps/api/drizzle/
