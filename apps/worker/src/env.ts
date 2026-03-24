@@ -18,6 +18,8 @@ const envSchema = z.object({
   HELIUS_MAX_WALLET_PAGES: z.coerce.number().int().positive().default(3),
   TELEGRAM_BOT_TOKEN: z.string().default(""),
   TELEGRAM_CHAT_IDS: z.string().default(""),
+  SNAPSHOT_INTERVAL_MS: z.coerce.number().int().nonnegative().default(900_000),
+  UNIVERSE_REFRESH_INTERVAL_MS: z.coerce.number().int().nonnegative().default(300_000),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info")
 });
 

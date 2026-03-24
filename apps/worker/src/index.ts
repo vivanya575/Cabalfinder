@@ -1,4 +1,4 @@
-import { Worker } from "bullmq";
+import { Worker, Queue } from "bullmq";
 import pino from "pino";
 import { and, desc, eq, gte, inArray } from "drizzle-orm";
 import { queueNames, calculateActiveScanScore } from "@cabalfinder/shared";
@@ -668,9 +668,98 @@ logger.info(
   "Cabalfinder V2 worker online"
 );
 
+// ─── Periodic scheduler ───────────────────────────────────────────────────────
+// Reads all tracked tokens from the DB and enqueues holder-snapshot and
+// token-universe-refresh jobs on a configurable interval.  Set the interval
+// env var to 0 to disable automatic scheduling for that job type.
+
+const schedulerQueues = {
+  holderSnapshot: new Queue(queueNames.holderSnapshot, { connection: createConnectionOptions() }),
+  universeRefresh: new Queue(queueNames.tokenUniverseRefresh, { connection: createConnectionOptions() })
+};
+
+async function scheduleHolderSnapshots(): Promise<void> {
+  try {
+    const trackedTokens = await db
+      .select({ mint: tokens.mint })
+      .from(tokens)
+      .where(gte(tokens.currentMarketCapUsd, env.TRACKING_MARKET_CAP_MIN_USD));
+
+    if (trackedTokens.length === 0) {
+      logger.debug("scheduler: no tracked tokens found, skipping holder-snapshot enqueue");
+      return;
+    }
+
+    for (const token of trackedTokens) {
+      await schedulerQueues.holderSnapshot.add(
+        `holder-snapshot-${token.mint}`,
+        { mint: token.mint },
+        { jobId: `holder-snapshot-${token.mint}-${Date.now()}` }
+      );
+    }
+
+    logger.info({ count: trackedTokens.length }, "scheduler: enqueued holder-snapshot jobs");
+  } catch (error) {
+    logger.error({ error }, "scheduler: failed to enqueue holder-snapshot jobs");
+  }
+}
+
+async function scheduleUniverseRefresh(): Promise<void> {
+  try {
+    const trackedTokens = await db
+      .select({ mint: tokens.mint })
+      .from(tokens);
+
+    if (trackedTokens.length === 0) {
+      logger.debug("scheduler: no tokens found for universe-refresh");
+      return;
+    }
+
+    const mints = trackedTokens.map((t) => t.mint);
+    await schedulerQueues.universeRefresh.add(
+      "universe-refresh",
+      { mints },
+      { jobId: `universe-refresh-${Date.now()}` }
+    );
+
+    logger.info({ mintCount: mints.length }, "scheduler: enqueued token-universe-refresh job");
+  } catch (error) {
+    logger.error({ error }, "scheduler: failed to enqueue token-universe-refresh job");
+  }
+}
+
+const schedulerTimers: NodeJS.Timeout[] = [];
+
+if (env.SNAPSHOT_INTERVAL_MS > 0) {
+  logger.info({ intervalMs: env.SNAPSHOT_INTERVAL_MS }, "scheduler: holder-snapshot auto-scheduling enabled");
+  const timer = setInterval(() => {
+    void scheduleHolderSnapshots();
+  }, env.SNAPSHOT_INTERVAL_MS);
+  schedulerTimers.push(timer);
+} else {
+  logger.info("scheduler: holder-snapshot auto-scheduling disabled (SNAPSHOT_INTERVAL_MS=0)");
+}
+
+if (env.UNIVERSE_REFRESH_INTERVAL_MS > 0) {
+  logger.info({ intervalMs: env.UNIVERSE_REFRESH_INTERVAL_MS }, "scheduler: universe-refresh auto-scheduling enabled");
+  const timer = setInterval(() => {
+    void scheduleUniverseRefresh();
+  }, env.UNIVERSE_REFRESH_INTERVAL_MS);
+  schedulerTimers.push(timer);
+} else {
+  logger.info("scheduler: universe-refresh auto-scheduling disabled (UNIVERSE_REFRESH_INTERVAL_MS=0)");
+}
+
 async function shutdown(signal: string) {
   logger.info({ signal }, "Shutting down worker");
-  await Promise.all(workers.map(({ worker }) => worker.close()));
+  for (const timer of schedulerTimers) {
+    clearInterval(timer);
+  }
+  await Promise.all([
+    ...workers.map(({ worker }) => worker.close()),
+    schedulerQueues.holderSnapshot.close(),
+    schedulerQueues.universeRefresh.close()
+  ]);
   process.exit(0);
 }
 
