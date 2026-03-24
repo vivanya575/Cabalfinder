@@ -1,0 +1,50 @@
+{
+  "name": "cabalfinder",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "build:v2": "npm run build --workspaces --if-present",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "typecheck:v2": "npm run typecheck --workspaces --if-present",
+    "check": "npm run typecheck && npm run build",
+    "check:v2": "npm run typecheck:v2 && npm run build:v2",
+    "dev:web": "npm run dev --workspace @cabalfinder/web",
+    "dev:api": "npm run dev --workspace @cabalfinder/api",
+    "dev:worker": "npm run dev --workspace @cabalfinder/worker",
+    "dev:mcp": "npm run dev --workspace @cabalfinder/mcp",
+    "infra:up": "bash scripts/infra-up.sh",
+    "infra:down": "bash scripts/infra-down.sh",
+    "dev:v2:ui": "concurrently -n api,web -c blue,magenta \"npm run dev:api\" \"npm run dev:web\"",
+    "dev:v2:full": "concurrently -n api,worker,web -c blue,yellow,magenta \"npm run dev:api\" \"npm run dev:worker\" \"npm run dev:web\"",
+    "dev:v2:no-infra": "npm run dev:v2:ui",
+    "dev:v2": "npm run infra:up && npm run dev:v2:ui",
+    "db:generate": "npm run db:generate --workspace @cabalfinder/api",
+    "db:migrate": "npm run db:migrate --workspace @cabalfinder/api",
+    "refresh:pools": "tsx scripts/refreshRaydiumPools.ts",
+    "test:live": "tsx scripts/liveSmoke.ts",
+    "test:live:mutations": "tsx scripts/liveSmoke.ts --mutations",
+    "test:load": "k6 run tests/load/dashboard.k6.js",
+    "test:security": "bash scripts/zap-baseline.sh",
+    "start": "tsx src/index.ts",
+    "run:once": "tsx src/index.ts run-once",
+    "scan": "tsx src/index.ts scan",
+    "web": "tsx src/index.ts web"
+  },
+  "dependencies": {
+    "bs58": "^6.0.0",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@types/node": "^22.13.10",
+    "concurrently": "^9.2.1",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
+  }
+}

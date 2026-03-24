@@ -1,0 +1,24 @@
+services:
+  postgres:
+    image: timescale/timescaledb:latest-pg17
+    container_name: cabalfinder-v2-postgres
+    environment:
+      POSTGRES_DB: cabalfinder
+      POSTGRES_USER: cabalfinder
+      POSTGRES_PASSWORD: cabalfinder
+    ports:
+      - "5432:5432"
+    volumes:
+      - cabalfinder_pg_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7.4-alpine
+    container_name: cabalfinder-v2-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - cabalfinder_redis_data:/data
+
+volumes:
+  cabalfinder_pg_data:
+  cabalfinder_redis_data:

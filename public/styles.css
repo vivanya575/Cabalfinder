@@ -1,0 +1,218 @@
+:root {
+  --bg: #06121f;
+  --bg-soft: #102338;
+  --card: rgba(10, 25, 40, 0.82);
+  --stroke: rgba(124, 185, 255, 0.3);
+  --text: #d7ebff;
+  --muted: #92b5d8;
+  --accent: #ff8a2b;
+  --accent-2: #6fffe9;
+  --danger: #ff5e5e;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Manrope, sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 12% 15%, rgba(111, 255, 233, 0.15), transparent 32%),
+    radial-gradient(circle at 88% 8%, rgba(255, 138, 43, 0.2), transparent 30%),
+    linear-gradient(145deg, #05111c 0%, #0b1b2d 50%, #142a43 100%);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.grain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.08;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+}
+
+.hero {
+  padding: 3.6rem 1.2rem 2rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  animation: rise 650ms ease both;
+}
+
+.eyebrow {
+  color: var(--accent-2);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  margin: 0;
+}
+
+h1 {
+  margin: 0.2rem 0 0.6rem;
+  font-family: "Bebas Neue", sans-serif;
+  font-size: clamp(3rem, 9vw, 6rem);
+  line-height: 0.9;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--muted);
+  max-width: 70ch;
+}
+
+.actions {
+  margin-top: 1.4rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.btn {
+  border: 1px solid var(--stroke);
+  background: rgba(19, 46, 72, 0.78);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 0.55rem 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 180ms ease, background 180ms ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  background: rgba(38, 76, 111, 0.88);
+}
+
+.btn:disabled {
+  cursor: wait;
+  opacity: 0.55;
+  transform: none;
+}
+
+.btn-accent {
+  background: linear-gradient(130deg, #ff8a2b, #ffb14a);
+  color: #231509;
+  border-color: transparent;
+}
+
+.btn-ghost {
+  background: transparent;
+}
+
+.status {
+  margin-top: 0.9rem;
+  color: var(--muted);
+  font-size: 0.93rem;
+}
+
+.grid {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1.2rem 2.4rem;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1rem;
+}
+
+.card {
+  grid-column: span 6;
+  background: var(--card);
+  border: 1px solid var(--stroke);
+  border-radius: 20px;
+  padding: 1rem;
+  backdrop-filter: blur(6px);
+  min-height: 250px;
+}
+
+.card-wide {
+  grid-column: span 12;
+}
+
+h2 {
+  margin: 0 0 0.7rem;
+  font-family: "Bebas Neue", sans-serif;
+  letter-spacing: 0.04em;
+  font-size: 1.6rem;
+}
+
+.scan-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
+}
+
+input {
+  flex: 1 1 440px;
+  min-width: 220px;
+  border-radius: 14px;
+  border: 1px solid var(--stroke);
+  background: rgba(9, 22, 35, 0.86);
+  color: var(--text);
+  padding: 0.7rem 0.85rem;
+}
+
+.table-wrap,
+#alerts,
+#controls,
+#snapshots {
+  max-height: 340px;
+  overflow: auto;
+}
+
+.item {
+  border: 1px solid rgba(146, 181, 216, 0.22);
+  border-radius: 12px;
+  padding: 0.65rem;
+  margin-bottom: 0.5rem;
+  background: rgba(9, 20, 34, 0.54);
+}
+
+.warning {
+  border-color: rgba(255, 138, 43, 0.45);
+  background: rgba(61, 34, 8, 0.48);
+}
+
+.item strong {
+  color: var(--accent-2);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  text-align: left;
+  border-bottom: 1px solid rgba(146, 181, 216, 0.2);
+  padding: 0.5rem;
+  font-size: 0.9rem;
+}
+
+th {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 900px) {
+  .card,
+  .card-wide {
+    grid-column: span 12;
+  }
+}

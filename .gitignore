@@ -1,0 +1,11 @@
+node_modules/
+dist/
+data/
+zap-report.html
+zap-report.md
+.env
+.next/
+coverage/
+*.tsbuildinfo
+apps/*/dist/
+apps/api/drizzle/

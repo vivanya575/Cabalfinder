@@ -1,0 +1,25 @@
+{
+  "tokenMint": "3H87g2Zd3T4TNfpnxHqN6e83xp8Avip1tx8Xv3j1pump",
+  "snapshotTime": "2026-03-23T16:17:46.692Z",
+  "supplyUi": 1000,
+  "holders": [
+    {
+      "rank": 1,
+      "owner": "4vJ9JU1bJJE96FWSJKvHsmmFADCg4gpZQff4P3bkLKi",
+      "amountUi": 120,
+      "share": 0.12
+    },
+    {
+      "rank": 2,
+      "owner": "8qbHbw2BbbTHBW1sbeqakYXVKRQM8Ne7pLK7m6CVfeR",
+      "amountUi": 80,
+      "share": 0.08
+    },
+    {
+      "rank": 3,
+      "owner": "CktRuQ2mttgRGkXJtyksdKHjUdc2C4TgDzyB98oEzy8",
+      "amountUi": 50,
+      "share": 0.05
+    }
+  ]
+}

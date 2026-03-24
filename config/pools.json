@@ -1,0 +1,42 @@
+[
+  {
+    "id": "sol-usdc-ref",
+    "dex": "raydium:675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8",
+    "baseMint": "So11111111111111111111111111111111111111112",
+    "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    "baseVault": "DQyrAcCrDXQ7NeoqGgDCZwBvWDcYmFCjSb9JtteuvPpz",
+    "quoteVault": "HLmqeL62xR1QoZ1HKKbXRrdN1p3phKpxRMb2VVopvBBz"
+  },
+  {
+    "id": "G7mw1d83ismcQJKkzt62Ug4noXCjVhu3eV7U5EMgge6Z",
+    "dex": "raydium:675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8",
+    "baseMint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+    "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    "baseVault": "B4kvik9yEXTJ1UScDUqTxfvhnHUkfChv5pF6zNSyEraQ",
+    "quoteVault": "5BsukuACaQcjVu9XSZ8PP3BN9pBxxtZjQELxosC4Ucyx"
+  },
+  {
+    "id": "GtKKKs3yaPdHbQd2aZS4SfWhy8zQ988BJGnKNndLxYsN",
+    "dex": "raydium:CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
+    "baseMint": "So11111111111111111111111111111111111111112",
+    "quoteMint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+    "baseVault": "GDnBvA76ZAJ2K3en2F1iExPZ6qz83Xjj5srXMmSKTYDW",
+    "quoteVault": "2wzaFLYb4JcDrVs8TfU3TfkVwq1Pdp3rRgWdNJzFGXud"
+  },
+  {
+    "id": "Fu5uXjR17rGbUur294Ke3UxCH8JF5nWYYCe9wqNjDuFr",
+    "dex": "raydium:CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
+    "baseMint": "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN",
+    "quoteMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    "baseVault": "6ahp4gbmq3bWkmvRS31FhnMVXv7t2szBTthhH1WppK3D",
+    "quoteVault": "5Tt78VMy6ncVdSUpLVdGhDw57de9JY4BSkZSGqYKGu3o"
+  },
+  {
+    "id": "EZVkeboWeXygtq8LMyENHyXdF5wpYrtExRNH9UwB1qYw",
+    "dex": "raydium:CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK",
+    "baseMint": "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN",
+    "quoteMint": "So11111111111111111111111111111111111111112",
+    "baseVault": "4wVRntu3HmKkRkRfYvLrovv41Tpm6yt66uNWB9TWgZjj",
+    "quoteVault": "6pkA4kTvKqgiWDrcTVVcJ3N6GszDdK6QC1fxT6GcmEvc"
+  }
+]
