@@ -12,6 +12,7 @@
     "db:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
+    "@cabalfinder/db": "*",
     "@cabalfinder/shared": "*",
     "@fastify/cors": "^11.2.0",
     "bs58": "^6.0.0",

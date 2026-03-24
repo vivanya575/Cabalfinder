@@ -13,7 +13,9 @@
     "baseUrl": ".",
     "paths": {
       "@cabalfinder/shared": ["packages/shared/src/index.ts"],
-      "@cabalfinder/shared/*": ["packages/shared/src/*"]
+      "@cabalfinder/shared/*": ["packages/shared/src/*"],
+      "@cabalfinder/db": ["packages/db/src/index.ts"],
+      "@cabalfinder/db/*": ["packages/db/src/*"]
     }
   }
 }

@@ -4,8 +4,10 @@ import { ZodError } from "zod";
 import { env } from "./env.js";
 import { AppError } from "./lib/errors.js";
 import { registerActiveScanRoutes } from "./routes/activeScan.js";
+import { registerAlertsRoutes } from "./routes/alerts.js";
 import { registerScoringRoutes } from "./routes/scoring.js";
 import { registerStatusRoutes } from "./routes/status.js";
+import { registerUniverseRoutes } from "./routes/universe.js";
 
 export async function buildServer() {
   const app = Fastify({
@@ -45,6 +47,8 @@ export async function buildServer() {
   await registerStatusRoutes(app);
   await registerScoringRoutes(app);
   await registerActiveScanRoutes(app);
+  await registerAlertsRoutes(app);
+  await registerUniverseRoutes(app);
 
   return app;
 }
